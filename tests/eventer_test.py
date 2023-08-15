@@ -38,7 +38,7 @@ class TestEventer(unittest.IsolatedAsyncioTestCase):
 
         n = Eventer(log_workdir=ONE_NODE_TEST_DB,
                     host='localhost', port=9090, nodes=[], loop=loop)
-        n.serve()
+        await n.serve()
 
         a = 'Hello'
         b = 'World'
@@ -65,8 +65,8 @@ class TestEventer(unittest.IsolatedAsyncioTestCase):
                      host='localhost', port=9191,
                      nodes=[('localhost', 9190,),], loop=loop)
 
-        n1.serve()
-        n2.serve()
+        await n1.serve()
+        await n2.serve()
 
         await asyncio.sleep(3)
 
@@ -98,9 +98,9 @@ class TestEventer(unittest.IsolatedAsyncioTestCase):
                      host='localhost', port=9292,
                      nodes=[('localhost', 9290,), ('localhost', 9291,),], loop=loop)
 
-        n1.serve()
-        n2.serve()
-        n3.serve()
+        await n1.serve()
+        await n2.serve()
+        await n3.serve()
 
         await asyncio.sleep(3)
 
