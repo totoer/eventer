@@ -12,12 +12,12 @@ class EventLog:
         return self._versions
 
     @property
-    def pick(self) -> Event:
-        return self._log[-1]
-
-    @property
     def log(self):
         return self._log
+
+    @property
+    def pick(self) -> Event:
+        return self._log[-1] if len(self._log) > 0 else None
 
     def __init__(self, workdir: str, max_size: int = 1000):
         self._workdir = workdir
@@ -50,6 +50,11 @@ class EventLog:
                 r_event = fp.read(next_event_size)
                 event = pickle.loads(r_event)
                 self._log.append(event)
+
+    def restore(self, versions: dict[str, float], log: list[Event]):
+        self._versions = versions
+        self._log = log
+        self._store()
 
     def _store(self):
         with open(self._versions_filepath, 'wb') as fp:

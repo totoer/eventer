@@ -9,6 +9,13 @@ from dataclasses import field, dataclass
 
 
 @dataclass
+class NodeInfo:
+
+    is_master: bool
+    delay: float
+
+
+@dataclass
 class Ping:
 
     versions: dict[str, float]
@@ -31,15 +38,18 @@ class Event:
 @dataclass
 class Sync:
 
-    host: str
-    port: int
+    log: list[Event]
+    versions: dict[str, float]
 
 
 class MType(IntEnum):
 
-    EVENT = 1
-    PING = 2
-    SYNC = 3
+    NODE_INFO = 1
+    NODE_INFO_RESPONSE = 2
+    EVENT = 3
+    PING = 4
+    SYNC = 5
+    SYNC_RESPONSE = 6
 
 
 class Message:
@@ -53,10 +63,12 @@ class Message:
         return self._m_type
 
     @property
-    def data(self) -> Event | Ping | Sync:
+    def data(self) -> Event | Ping | Sync | NodeInfo | None:
         return self._data
 
-    def __init__(self, node_id: str, m_type: MType, data: Event | Ping | Sync) -> None:
+    def __init__(
+            self, node_id: str, m_type: MType,
+            data: Event | Ping | Sync | NodeInfo | None) -> None:
         self._node_id = node_id
         self._m_type = m_type
         self._data = data
@@ -72,10 +84,11 @@ class Message:
         m_type = int(self._m_type)
         buffer.write(m_type.to_bytes(2, 'big'))
 
-        r_data = pickle.dumps(self._data)
-        data_size = len(r_data)
-        buffer.write(data_size.to_bytes(2, 'big'))
-        buffer.write(r_data)
+        if self._data:
+            r_data = pickle.dumps(self._data)
+            data_size = len(r_data)
+            buffer.write(data_size.to_bytes(2, 'big'))
+            buffer.write(r_data)
 
         return buffer.getvalue()
 
@@ -85,6 +98,10 @@ class Message:
         writer.write(self.encode())
         await writer.drain()
         return (reader, writer,)
+
+    async def response(self, writer: asyncio.StreamWriter):
+        writer.write(self.encode())
+        await writer.drain()
 
 
 def decode_message(data: bytes) -> Message:
@@ -101,6 +118,6 @@ def decode_message(data: bytes) -> Message:
     data_size = int.from_bytes(r_data_size, 'big')
 
     r_data = buffer.read(data_size)
-    _data = pickle.loads(r_data)
+    _data = pickle.loads(r_data) if r_data != b'' else None
 
     return Message(node_id=node_id, m_type=m_type, data=_data)
