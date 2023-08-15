@@ -1,0 +1,15 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "eventer"
+version = "0.1.0"
+authors = [
+  { name="Alexy Protsenko", email="totoeru@gmail.com" },
+]
+description = "Distributed event processing"
+requires-python = ">=3.7"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+]
